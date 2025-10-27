@@ -1,22 +1,77 @@
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.log
+
+# --- Virtual Environments ---
+venv/
+env/
+.venv/
+
+# --- Django Specific ---
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+static/
+*.pot
+*.mo
+
+# --- Environment & Config ---
+.env
+.env.*
+*.ini
+*.cfg
+*.bak
+
+# --- IDE / Editor ---
 .vscode/
-#Cache folder
-.alcache/
-#Symbols folder
-.alpackages/
-#Snapshots folder
-.snapshots/
-#Testing Output folder
-.output/
-#Extension App-file
-*.app
-#Rapid Application Development File
-rad.json
-#Translation Base-file
-*.g.xlf
-#License-file
-*.flf
-#Test results file
-TestResults.xml
+.idea/
+*.swp
+*.swo
+
+# --- Pipenv & Poetry ---
+Pipfile.lock
+poetry.lock
+
+# --- Cache & Temporary ---
+.DS_Store
+Thumbs.db
+__MACOSX/
+logs/
+tmp/
+*.tmp
+
+# --- Migrations (Optional: include if auto-generated only) ---
+# Uncomment below if you regenerate migrations frequently
+# */migrations/
+# !*/migrations/__init__.py
+
+# --- Redis / Celery ---
+celerybeat-schedule
+celerybeat.pid
+
+# --- Backup & Testing ---
+.coverage
+htmlcov/
+.tox/
+pytest_cache/
+*.cover
+nosetests.xml
+coverage.xml
+*.spec
+
+# --- Node / Frontend (in case you add React/Vue later) ---
+node_modules/
+dist/
+build/
+
+# --- Docker ---
+*.pid
+*.seed
+*.pid.lock
+docker-compose.override.yml
