@@ -2,10 +2,11 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from .models import Order
 from .serializers import OrderSerializer
+from rest_framework.permissions import AllowAny
 
 class OrderListCreateView(generics.ListCreateAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         # Only return orders for the logged-in user
@@ -30,4 +31,5 @@ class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
         if status_param:
             qs = qs.filter(status=status_param)
         return qs
+    
 

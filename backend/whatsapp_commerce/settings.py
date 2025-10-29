@@ -10,7 +10,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # --- Security Settings ---
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")  # Use a fallback for dev
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = ["*"] 
+
+
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER')
 
 
 # --- Installed Apps ---
@@ -33,7 +38,7 @@ INSTALLED_APPS = [
     "products",
     "orders",
     "promotions",
-    "whatsappbot",
+    "whatsapp",
 ]
 
 AUTH_USER_MODEL = "users.User"
