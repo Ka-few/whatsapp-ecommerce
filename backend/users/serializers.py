@@ -34,3 +34,9 @@ class ReferralCommissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReferralCommission
         fields = ["id", "referrer", "order_id", "amount", "created_at"]
+        
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+

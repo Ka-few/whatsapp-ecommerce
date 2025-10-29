@@ -12,9 +12,11 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")  # Use a fallback fo
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
+
 # --- Installed Apps ---
 INSTALLED_APPS = [
     # Django core apps
+    "users",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -27,12 +29,14 @@ INSTALLED_APPS = [
     "corsheaders",  # ✅ Recommended for APIs accessed from external clients
 
     # Local apps
-    "users",
+    # "users",
     "products",
     "orders",
     "promotions",
     "whatsappbot",
 ]
+
+AUTH_USER_MODEL = "users.User"
 
 # --- Middleware ---
 MIDDLEWARE = [
@@ -46,7 +50,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "whatsapp_bot_backend.urls"
+ROOT_URLCONF = "whatsapp_commerce.urls"
 
 # --- Templates ---
 TEMPLATES = [
@@ -65,7 +69,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "whatsapp_bot_backend.wsgi.application"
+WSGI_APPLICATION = "whatsapp_commerce.wsgi.application"
 
 # --- Database ---
 DATABASES = {
@@ -98,6 +102,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+AUTH_USER_MODEL = "users.User"
+
 
 # --- Celery (Optional) ---
 CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
