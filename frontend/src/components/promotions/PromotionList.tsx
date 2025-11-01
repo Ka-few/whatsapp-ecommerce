@@ -17,13 +17,13 @@ const PromotionList = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
 
   useEffect(() => {
-    fetch('/api/promotions/')
+    fetch('whatsapp-ecommerce-evls.onrender.com/api/promotions/')
       .then(response => response.json())
       .then(data => setPromotions(data));
   }, []);
 
   const handleDelete = (id: number) => {
-    fetch(`/api/promotions/${id}/`, {
+    fetch(`whatsapp-ecommerce-evls.onrender.com/api/promotions/${id}/`, {
       method: 'DELETE',
     })
       .then(() => setPromotions(promotions.filter(p => p.id !== id)));

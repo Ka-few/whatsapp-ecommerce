@@ -15,7 +15,7 @@ const OrderList = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    fetch('/api/orders/')
+    fetch('whatsapp-ecommerce-evls.onrender.com/api/orders/')
       .then(response => response.json())
       .then(data => setOrders(data));
   }, []);

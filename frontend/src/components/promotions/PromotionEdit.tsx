@@ -14,7 +14,7 @@ const PromotionEdit = () => {
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/promotions/${id}/`)
+    fetch(`whatsapp-ecommerce-evls.onrender.com/api/promotions/${id}/`)
       .then(response => response.json())
       .then(data => {
         setCode(data.code);
@@ -29,7 +29,7 @@ const PromotionEdit = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    fetch(`/api/promotions/${id}/`, {
+    fetch(`whatsapp-ecommerce-evls.onrender.com/api/promotions/${id}/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

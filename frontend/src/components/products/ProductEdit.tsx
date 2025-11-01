@@ -10,7 +10,7 @@ const ProductEdit = () => {
   const [price, setPrice] = useState('');
 
   useEffect(() => {
-    fetch(`/api/products/${id}/`)
+    fetch(`whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`)
       .then(response => response.json())
       .then(data => {
         setName(data.name);
