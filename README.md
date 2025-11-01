@@ -46,21 +46,21 @@ The system supports automated WhatsApp responses, product management, promotions
 
 ## 🛠️ Local Setup
 ## 1. Clone the repo
-### git clone https://github.com/<your-username>/whatsapp-commerce.git
-### cd whatsapp-commerce/backend
+- git clone https://github.com/<your-username>/whatsapp-commerce.git
+- cd whatsapp-commerce/backend
 ## 2. Create a virtual environment
-### python -m venv venv
-### source venv/bin/activate
+- python -m venv venv
+- source venv/bin/activate
 ## 3. Install dependencies
-### pip install -r requirements.txt
+- pip install -r requirements.txt
 ## 4. Apply migrations
-### python manage.py migrate
+- python manage.py migrate
 ## 5. Run the server
-### python manage.py runserver
+- python manage.py runserver
 ## 6. Expose the webhook (for Twilio testing)
-### ngrok http 8000
+- ngrok http 8000
 ## 7. Set the webhook URL in Twilio
-### https://<ngrok-url>/api/whatsapp/webhook/
+- https://<ngrok-url>/api/whatsapp/webhook/
 
 
 
