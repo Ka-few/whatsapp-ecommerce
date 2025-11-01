@@ -13,6 +13,10 @@ from django.db.models import Sum
 import random
 import string
 
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
 class RegisterUserView(APIView):
     def post(self, request):
         phone_number = request.data.get("phone_number")

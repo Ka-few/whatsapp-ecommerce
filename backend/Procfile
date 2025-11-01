@@ -1,0 +1,2 @@
+web: gunicorn whatsapp_commerce.wsgi
+worker: celery -A whatsapp_commerce worker --loglevel=info

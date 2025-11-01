@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from .views import AnalyticsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -8,4 +9,5 @@ urlpatterns = [
     path('api/orders/', include('orders.urls')),
     path('api/promotions/', include('promotions.urls')),
     path('api/whatsapp/', include('whatsapp.urls')),
+    path('api/analytics/', AnalyticsView.as_view(), name='analytics'),
 ]

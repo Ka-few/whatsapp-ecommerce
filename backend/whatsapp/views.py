@@ -3,12 +3,10 @@ import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from twilio.rest import Client
 from users.models import User
 from .models import WhatsAppSession
+from .utils import send_whatsapp_message
 
-twilio_client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"
 API_BASE_URL = "http://127.0.0.1:8000/api"
 
 
@@ -78,7 +76,7 @@ def whatsapp_webhook(request):
                     products = requests.get(f"{API_BASE_URL}/products/").json()
                     if 0 <= product_index < len(products):
                         product = products[product_index]
-                        session.context = {"product": product}
+                        session.context["current_product"] = product
                         session.state = "awaiting_quantity"
                         session.save()
                         send_whatsapp_message(
@@ -103,41 +101,83 @@ def whatsapp_webhook(request):
 
                 if incoming_msg.isdigit():
                     quantity = int(incoming_msg)
-                    product = session.context.get("product")
+                    product = session.context.get("current_product")
 
-                    session.context["quantity"] = quantity
-                    session.state = "confirming_order"
+                    if not product:
+                        send_whatsapp_message(from_number, "⚠️ No product selected. Please select a product first.")
+                        session.state = "browsing_products"
+                        session.save()
+                        send_products(from_number)
+                        return JsonResponse({"status": "no product selected"})
+
+                    # Initialize cart if it doesn't exist
+                    cart = session.context.get("cart", [])
+                    cart.append({"product": product, "quantity": quantity})
+                    session.context["cart"] = cart
+                    session.state = "awaiting_more_items"
                     session.save()
 
-                    total = quantity * float(product["price"])
                     send_whatsapp_message(
                         from_number,
-                        f"✅ Confirm order:\n\n"
-                        f"{quantity} × {product['name']} = *KES {total:,.2f}*\n\n"
-                        "Reply *yes* to confirm or *menu* to cancel."
+                        f"✅ Added {quantity} x {product['name']} to your cart.\n"
+                        "Do you want to add more items? Reply *yes* or *checkout*."
                     )
-                    return JsonResponse({"status": "confirming order"})
+                    return JsonResponse({"status": "item added to cart"})
                 else:
                     send_whatsapp_message(from_number, "⚠️ Please enter a valid number for quantity.")
                 return JsonResponse({"status": "invalid quantity"})
 
+            # STEP 4.5: AWAITING MORE ITEMS
+            elif session.state == "awaiting_more_items":
+                if incoming_msg == "yes":
+                    session.state = "browsing_products"
+                    session.save()
+                    send_products(from_number)
+                    return JsonResponse({"status": "browsing more products"})
+                elif incoming_msg == "checkout":
+                    session.state = "confirming_order"
+                    session.save()
+                    send_confirmation_message(from_number, session.context.get("cart", []))
+                    return JsonResponse({"status": "proceeding to checkout"})
+                elif incoming_msg == "menu":
+                    session.state = "menu"
+                    session.context = {}
+                    session.save()
+                    send_menu(from_number)
+                    return JsonResponse({"status": "back to menu"})
+                else:
+                    send_whatsapp_message(from_number, "❓ Reply *yes* to add more items or *checkout* to confirm your order.")
+                    return JsonResponse({"status": "invalid option for more items"})
+
             # STEP 5: CONFIRM ORDER
             elif session.state == "confirming_order":
                 if incoming_msg == "yes":
-                    product = session.context.get("product")
-                    quantity = session.context.get("quantity")
+                    cart = session.context.get("cart", [])
+                    if not cart:
+                        send_whatsapp_message(from_number, "⚠️ Your cart is empty. Please add some products first.")
+                        session.state = "menu"
+                        session.context = {}
+                        session.save()
+                        send_menu(from_number)
+                        return JsonResponse({"status": "empty cart"})
+
+                    order_items_payload = []
+                    total_amount = 0
+                    for item in cart:
+                        product = item["product"]
+                        quantity = item["quantity"]
+                        order_items_payload.append({
+                            "product": product["id"],
+                            "quantity": quantity,
+                            "price": product["price"]
+                        })
+                        total_amount += float(product["price"]) * quantity
 
                     # Create order in backend
                     order_payload = {
                         "user": user.id,
-                        "items": [
-                            {
-                                "product": product["id"],
-                                "quantity": quantity,
-                                "price": product["price"]
-                            }
-                        ],
-                        "total_amount": float(product["price"]) * quantity,
+                        "items": order_items_payload,
+                        "total_amount": total_amount,
                         "status": "pending",
                     }
 
@@ -145,7 +185,7 @@ def whatsapp_webhook(request):
                     if resp.status_code in [200, 201]:
                         send_whatsapp_message(
                             from_number,
-                            f"🎉 Order placed successfully!\nOrder total: *KES {order_payload['total_amount']:,.2f}*\nWe’ll notify you once it’s confirmed."
+                            f"🎉 Order placed successfully!\nOrder total: *KES {total_amount:,.2f}*\nWe’ll notify you once it’s confirmed."
                         )
                     else:
                         send_whatsapp_message(from_number, "⚠️ Could not create order, please try again later.")
@@ -189,14 +229,25 @@ def send_menu(to):
     )
     send_whatsapp_message(to, msg)
 
+def send_confirmation_message(to, cart):
+    if not cart:
+        send_whatsapp_message(to, "Your cart is empty.")
+        return
 
-def send_whatsapp_message(to, message):
-    twilio_client.messages.create(
-        from_=TWILIO_WHATSAPP_NUMBER,
-        body=message,
-        to=to,
-    )
+    message_lines = ["✅ *Confirm your order:*\n"]
+    total_amount = 0
 
+    for item in cart:
+        product = item["product"]
+        quantity = item["quantity"]
+        item_total = float(product["price"]) * quantity
+        total_amount += item_total
+        message_lines.append(f"{quantity} x {product['name']} (KES {product['price']}) = KES {item_total:,.2f}")
+
+    message_lines.append(f"\n*Total: KES {total_amount:,.2f}*\n")
+    message_lines.append("Reply *yes* to confirm or *menu* to cancel.")
+
+    send_whatsapp_message(to, "\n".join(message_lines))
 
 def send_products(to):
     resp = requests.get(f"{API_BASE_URL}/products/")
@@ -221,7 +272,7 @@ def send_promotions(to):
         if promos:
             lines = ["🎉 *Promotions:*"]
             for promo in promos:
-                lines.append(f"• {promo['title']} - {promo['description']}")
+                lines.append(f"• {promo['code']} - {promo['description']}")
             lines.append("\nReply *menu* to go back.")
             send_whatsapp_message(to, "\n".join(lines))
         else:

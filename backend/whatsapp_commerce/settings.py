@@ -1,27 +1,31 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
-# Load environment variables from .env file
+# Load environment variables from .env file (works locally)
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- Security Settings ---
-SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")  # Use a fallback for dev
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS = ["*"] 
+# -----------------------------
+# 🔐 SECURITY SETTINGS
+# -----------------------------
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+ALLOWED_HOSTS = ["*"]  # On Render, use ["your-service-name.onrender.com"]
 
+# -----------------------------
+# 📞 TWILIO WHATSAPP CONFIG
+# -----------------------------
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
 
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER')
-
-
-# --- Installed Apps ---
+# -----------------------------
+# 🧩 INSTALLED APPS
+# -----------------------------
 INSTALLED_APPS = [
-    # Django core apps
-    "users",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -31,10 +35,11 @@ INSTALLED_APPS = [
 
     # Third-party apps
     "rest_framework",
-    "corsheaders",  # ✅ Recommended for APIs accessed from external clients
+    "corsheaders",
+    "django_celery_beat",
 
     # Local apps
-    # "users",
+    "users",
     "products",
     "orders",
     "promotions",
@@ -43,11 +48,14 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = "users.User"
 
-# --- Middleware ---
+# -----------------------------
+# ⚙️ MIDDLEWARE
+# -----------------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # ✅ For static file serving on Render
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # ✅ Add before CommonMiddleware
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -57,11 +65,13 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "whatsapp_commerce.urls"
 
-# --- Templates ---
+# -----------------------------
+# 🧱 TEMPLATES
+# -----------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "../frontend/build"],  # ✅ Serve React build
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -76,49 +86,72 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "whatsapp_commerce.wsgi.application"
 
-# --- Database ---
+# -----------------------------
+# 🗄 DATABASE
+# -----------------------------
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
-        "PORT": os.getenv("DB_PORT", "5432"),
-    }
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
-# --- REST Framework ---
+# -----------------------------
+# 🌍 REST FRAMEWORK
+# -----------------------------
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",  # You can later tighten this
+        "rest_framework.permissions.AllowAny",
     ],
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
 }
 
-# --- CORS Configuration ---
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all for now; restrict later in production
+# -----------------------------
+# 🌐 CORS
+# -----------------------------
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all during testing
+# Later, restrict with:
+# CORS_ALLOWED_ORIGINS = ["https://your-frontend.onrender.com"]
 
-# --- Static & Media Files ---
+# -----------------------------
+# 🖼 STATIC & MEDIA FILES
+# -----------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-AUTH_USER_MODEL = "users.User"
 
+# ✅ Serve React frontend
+STATICFILES_DIRS = [
+    BASE_DIR / "../frontend/build/static",
+]
 
-# --- Celery (Optional) ---
+# -----------------------------
+# 🕒 CELERY CONFIG
+# -----------------------------
 CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_BEAT_SCHEDULE = {
+    "send-daily-product-summary": {
+        "task": "promotions.tasks.send_daily_product_summary",
+        "schedule": 86400,
+    },
+}
 
-# --- External API Keys ---
+# -----------------------------
+# 🔑 API KEYS
+# -----------------------------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 WHATSAPP_ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN")
 WHATSAPP_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
 
-# --- Timezone ---
+# -----------------------------
+# ⏰ TIME & LANGUAGE
+# -----------------------------
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Africa/Nairobi"
 USE_I18N = True

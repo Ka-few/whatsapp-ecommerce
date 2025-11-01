@@ -10,7 +10,8 @@ class OrderListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         # Only return orders for the logged-in user
-        return Order.objects.filter(user=self.request.user).order_by('-created_at')
+        # return Order.objects.filter(user=self.request.user).order_by('-created_at')
+        return Order.objects.all().order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
