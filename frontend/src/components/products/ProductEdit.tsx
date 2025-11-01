@@ -10,7 +10,7 @@ const ProductEdit = () => {
   const [price, setPrice] = useState('');
 
   useEffect(() => {
-    fetch(`whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`)
+    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`)
       .then(response => response.json())
       .then(data => {
         setName(data.name);
@@ -21,7 +21,7 @@ const ProductEdit = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    fetch(`/api/products/${id}/`, {
+    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

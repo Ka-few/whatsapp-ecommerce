@@ -12,7 +12,7 @@ const Analytics = () => {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
-    fetch('whatsapp-ecommerce-evls.onrender.com/api/analytics/')
+    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/analytics/')
       .then(response => response.json())
       .then(data => setAnalytics(data))
       .catch(error => console.error('Error fetching analytics:', error));

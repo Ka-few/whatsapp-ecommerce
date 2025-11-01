@@ -14,7 +14,7 @@ const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    fetch('whatsapp-ecommerce-evls.onrender.com/api/users/')
+    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/users/')
       .then(response => response.json())
       .then(data => setUsers(data));
   }, []);

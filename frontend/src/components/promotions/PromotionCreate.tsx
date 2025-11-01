@@ -14,7 +14,7 @@ const PromotionCreate = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    fetch('whatsapp-ecommerce-evls.onrender.com/api/promotions/', {
+    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/promotions/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -13,13 +13,13 @@ const ProductList = () => {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch('whatsapp-ecommerce-evls.onrender.com/api/products/')
+    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/products/')
       .then(response => response.json())
       .then(data => setProducts(data));
   }, []);
 
   const handleDelete = (id: number) => {
-    fetch(`whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`, {
+    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`, {
       method: 'DELETE',
     })
       .then(() => setProducts(products.filter(p => p.id !== id)));

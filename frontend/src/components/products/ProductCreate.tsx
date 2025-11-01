@@ -10,7 +10,7 @@ const ProductCreate = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    fetch('whatsapp-ecommerce-evls.onrender.com/api/products/', {
+    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/products/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
