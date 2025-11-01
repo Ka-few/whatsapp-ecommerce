@@ -1,20 +1,25 @@
 import json
 import requests
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from users.models import User
 from .models import WhatsAppSession
 from .utils import send_whatsapp_message
 
-API_BASE_URL = "http://127.0.0.1:8000/api"
+# Use your live Render backend URL
+API_BASE_URL = "https://whatsapp-ecommerce-evls.onrender.com/api"
 
 
 @csrf_exempt
 def whatsapp_webhook(request):
+    if request.method == "GET":
+        # Webhook verification (for Meta sandbox or testing)
+        return HttpResponse("Webhook verified", status=200)
+
     if request.method == "POST":
         try:
-            data = request.POST.dict()
+            data = request.POST.dict() or json.loads(request.body.decode("utf-8"))
             print("📩 Incoming WhatsApp data:", data)
 
             incoming_msg = data.get("Body", "").strip().lower()
@@ -71,7 +76,6 @@ def whatsapp_webhook(request):
                     return JsonResponse({"status": "back to menu"})
 
                 try:
-                    # User selects a product by number (1, 2, 3)
                     product_index = int(incoming_msg) - 1
                     products = requests.get(f"{API_BASE_URL}/products/").json()
                     if 0 <= product_index < len(products):
@@ -110,7 +114,6 @@ def whatsapp_webhook(request):
                         send_products(from_number)
                         return JsonResponse({"status": "no product selected"})
 
-                    # Initialize cart if it doesn't exist
                     cart = session.context.get("cart", [])
                     cart.append({"product": product, "quantity": quantity})
                     session.context["cart"] = cart
@@ -173,7 +176,6 @@ def whatsapp_webhook(request):
                         })
                         total_amount += float(product["price"]) * quantity
 
-                    # Create order in backend
                     order_payload = {
                         "user": user.id,
                         "items": order_items_payload,
@@ -229,6 +231,7 @@ def send_menu(to):
     )
     send_whatsapp_message(to, msg)
 
+
 def send_confirmation_message(to, cart):
     if not cart:
         send_whatsapp_message(to, "Your cart is empty.")
@@ -248,6 +251,7 @@ def send_confirmation_message(to, cart):
     message_lines.append("Reply *yes* to confirm or *menu* to cancel.")
 
     send_whatsapp_message(to, "\n".join(message_lines))
+
 
 def send_products(to):
     resp = requests.get(f"{API_BASE_URL}/products/")
