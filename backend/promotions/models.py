@@ -24,4 +24,10 @@ class Promotion(models.Model):
     def is_valid(self):
         """Check if the promotion is active and within date range."""
         now = timezone.now()
-        return self.is_active and (self.start_date <= now <= (self.end_date or now))
+        if not self.is_active:
+            return False
+        if self.start_date > now:
+            return False
+        if self.end_date and self.end_date < now:
+            return False
+        return True

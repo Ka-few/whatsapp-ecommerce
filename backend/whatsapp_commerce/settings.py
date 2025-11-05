@@ -13,12 +13,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -----------------------------
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-ALLOWED_HOSTS = [
-    "whatsapp-ecommerce-evls.onrender.com",  # your Render domain
-    "localhost",
-    "127.0.0.1",
-    os.environ.get("RENDER_EXTERNAL_HOSTNAME", "")
-]  # On Render, use ["your-service-name.onrender.com"]
+ALLOWED_HOSTS = ['*']
+
+# ALLOWED_HOSTS = [
+#     "whatsapp-ecommerce-evls.onrender.com",  # your Render domain
+#     "localhost",
+#     "127.0.0.1",
+#     os.environ.get("RENDER_EXTERNAL_HOSTNAME", "")
+# ]  # On Render, use ["your-service-name.onrender.com"]
 
 # -----------------------------
 # 📞 TWILIO WHATSAPP CONFIG
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
     "orders",
     "promotions",
     "whatsapp",
+    "mpesa",
 ]
 
 AUTH_USER_MODEL = "users.User"

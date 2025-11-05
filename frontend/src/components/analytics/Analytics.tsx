@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col } from 'react-bootstrap';
+import { API_BASE_URL } from '../../apiConfig';
 
 interface AnalyticsData {
   totalProducts: number;
@@ -12,7 +13,7 @@ const Analytics = () => {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
-    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/analytics/')
+    fetch(`${API_BASE_URL}/analytics/`)
       .then(response => response.json())
       .then(data => setAnalytics(data))
       .catch(error => console.error('Error fetching analytics:', error));

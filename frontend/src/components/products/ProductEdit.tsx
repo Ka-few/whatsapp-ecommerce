@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import { API_BASE_URL } from '../../apiConfig';
 
 const ProductEdit = () => {
   const { id } = useParams();
@@ -10,7 +11,7 @@ const ProductEdit = () => {
   const [price, setPrice] = useState('');
 
   useEffect(() => {
-    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`)
+    fetch(`${API_BASE_URL}/products/${id}/`)
       .then(response => response.json())
       .then(data => {
         setName(data.name);
@@ -21,7 +22,7 @@ const ProductEdit = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`, {
+    fetch(`${API_BASE_URL}/products/${id}/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

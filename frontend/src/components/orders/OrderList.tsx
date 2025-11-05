@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from 'react-bootstrap';
+import { API_BASE_URL } from '../../apiConfig';
 
 interface Order {
   id: number;
@@ -15,7 +16,7 @@ const OrderList = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/orders/')
+    fetch(`${API_BASE_URL}/orders/`)
       .then(response => response.json())
       .then(data => setOrders(data));
   }, []);

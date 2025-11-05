@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../apiConfig';
 
 interface Promotion {
   id: number;
@@ -17,13 +18,13 @@ const PromotionList = () => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
 
   useEffect(() => {
-    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/promotions/')
+    fetch(`${API_BASE_URL}/promotions/`)
       .then(response => response.json())
       .then(data => setPromotions(data));
   }, []);
 
   const handleDelete = (id: number) => {
-    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/promotions/${id}/`, {
+    fetch(`${API_BASE_URL}/promotions/${id}/`, {
       method: 'DELETE',
     })
       .then(() => setPromotions(promotions.filter(p => p.id !== id)));

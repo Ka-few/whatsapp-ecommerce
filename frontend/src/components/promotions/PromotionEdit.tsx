@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import { API_BASE_URL } from '../../apiConfig';
 
 const PromotionEdit = () => {
   const { id } = useParams();
@@ -14,7 +15,7 @@ const PromotionEdit = () => {
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
-    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/promotions/${id}/`)
+    fetch(`${API_BASE_URL}/promotions/${id}/`)
       .then(response => response.json())
       .then(data => {
         setCode(data.code);
@@ -29,7 +30,7 @@ const PromotionEdit = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/promotions/${id}/`, {
+    fetch(`${API_BASE_URL}/promotions/${id}/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

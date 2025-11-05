@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../apiConfig';
 
 const PromotionCreate = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const PromotionCreate = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/promotions/', {
+    fetch(`${API_BASE_URL}/promotions/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

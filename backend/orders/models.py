@@ -5,6 +5,7 @@ from promotions.models import Promotion
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('pending_payment', 'Pending Payment'),
         ('paid', 'Paid'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),

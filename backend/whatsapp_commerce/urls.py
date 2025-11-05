@@ -14,7 +14,8 @@ def home(request):
             "orders": "/api/orders/",
             "promotions": "/api/promotions/",
             "whatsapp": "/api/whatsapp/",
-            "analytics": "/api/analytics/"
+            "analytics": "/api/analytics/",
+            "mpesa": "/api/mpesa/",
         }
     })
 
@@ -26,6 +27,7 @@ urlpatterns = [
     path("api/orders/", include("orders.urls")),
     path("api/promotions/", include("promotions.urls")),
     path("api/whatsapp/", include("whatsapp.urls")),
+    path("api/mpesa/", include("mpesa.urls")),
     path("api/analytics/", AnalyticsView.as_view(), name="analytics"),
 ]
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../apiConfig';
 
 interface Product {
   id: number;
@@ -13,13 +14,13 @@ const ProductList = () => {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch('https://whatsapp-ecommerce-evls.onrender.com/api/products/')
+    fetch(`${API_BASE_URL}/products/`)
       .then(response => response.json())
       .then(data => setProducts(data));
   }, []);
 
   const handleDelete = (id: number) => {
-    fetch(`https://whatsapp-ecommerce-evls.onrender.com/api/products/${id}/`, {
+    fetch(`${API_BASE_URL}/products/${id}/`, {
       method: 'DELETE',
     })
       .then(() => setProducts(products.filter(p => p.id !== id)));

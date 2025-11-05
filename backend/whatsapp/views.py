@@ -8,7 +8,7 @@ from .models import WhatsAppSession
 from .utils import send_whatsapp_message
 
 # Use your live Render backend URL
-API_BASE_URL = "https://whatsapp-ecommerce-evls.onrender.com/api"
+API_BASE_URL = "http://localhost:8000/api"
 
 
 @csrf_exempt
@@ -36,7 +36,7 @@ def whatsapp_webhook(request):
             # === STATE MACHINE ===
 
             # STEP 1: WELCOME / MENU
-            if incoming_msg in ["hi", "hello", "menu"]:
+            if incoming_msg in ["hi", "hello", "menu", "vipi", "niaje", "hey"]:
                 session.state = "menu"
                 session.context = {}
                 session.save()
@@ -138,21 +138,22 @@ def whatsapp_webhook(request):
                     send_products(from_number)
                     return JsonResponse({"status": "browsing more products"})
                 elif incoming_msg == "checkout":
-                    session.state = "confirming_order"
+                    session.state = "awaiting_promotion_code"  # New state
                     session.save()
-                    send_confirmation_message(from_number, session.context.get("cart", []))
-                    return JsonResponse({"status": "proceeding to checkout"})
-                elif incoming_msg == "menu":
-                    session.state = "menu"
-                    session.context = {}
-                    session.save()
-                    send_menu(from_number)
-                    return JsonResponse({"status": "back to menu"})
-                else:
-                    send_whatsapp_message(from_number, "❓ Reply *yes* to add more items or *checkout* to confirm your order.")
-                    return JsonResponse({"status": "invalid option for more items"})
+                    send_whatsapp_message(from_number, "Do you have a promotion code? Reply with the code or *no* to skip.")
+                    return JsonResponse({"status": "awaiting promotion code"})
 
-            # STEP 5: CONFIRM ORDER
+            # STEP 4.7: AWAITING PROMOTION CODE
+            elif session.state == "awaiting_promotion_code":
+                if incoming_msg.lower() != 'no':
+                    session.context['promotion_code'] = incoming_msg
+                
+                session.state = "confirming_order"
+                session.save()
+                send_confirmation_message(from_number, session.context.get("cart", []))
+                return JsonResponse({"status": "proceeding to checkout"})
+
+            # STEP 5: CONFIRM ORDER AND INITIATE PAYMENT
             elif session.state == "confirming_order":
                 if incoming_msg == "yes":
                     cart = session.context.get("cart", [])
@@ -172,31 +173,48 @@ def whatsapp_webhook(request):
                         order_items_payload.append({
                             "product": product["id"],
                             "quantity": quantity,
-                            "price": product["price"]
                         })
                         total_amount += float(product["price"]) * quantity
 
                     order_payload = {
                         "user": user.id,
                         "items": order_items_payload,
-                        "total_amount": total_amount,
-                        "status": "pending",
+                        "status": "pending_payment",
                     }
 
+                    if "promotion_code" in session.context:
+                        order_payload["promotion_code"] = session.context["promotion_code"]
+
+                    # 1. Create the order first
                     resp = requests.post(f"{API_BASE_URL}/orders/", json=order_payload)
                     if resp.status_code in [200, 201]:
-                        send_whatsapp_message(
-                            from_number,
-                            f"🎉 Order placed successfully!\nOrder total: *KES {total_amount:,.2f}*\nWe’ll notify you once it’s confirmed."
-                        )
+                        order_data = resp.json()
+                        order_id = order_data.get("id")
+                        final_total = float(order_data.get("total_amount"))
+                        
+                        # 2. Trigger M-Pesa STK Push
+                        from mpesa.services import trigger_stk_push
+                        stk_sent = trigger_stk_push(user.phone_number, final_total)
+
+                        if stk_sent:
+                            send_whatsapp_message(
+                                from_number,
+                                f"⏳ Processing KES {final_total:,.2f}. Please check your phone and enter your M-Pesa PIN to complete the payment."
+                            )
+                            # Optional: Store order_id in session for callback verification
+                            session.context['pending_order_id'] = order_id 
+                        else:
+                             send_whatsapp_message(from_number, "⚠️ Could not initiate M-Pesa payment. Please try again.")
+
                     else:
                         send_whatsapp_message(from_number, "⚠️ Could not create order, please try again later.")
 
+                    # Reset session after payment attempt
                     session.state = "menu"
                     session.context = {}
                     session.save()
                     send_menu(from_number)
-                    return JsonResponse({"status": "order confirmed"})
+                    return JsonResponse({"status": "payment_initiated"})
 
                 elif incoming_msg == "menu":
                     session.state = "menu"
@@ -224,7 +242,7 @@ def whatsapp_webhook(request):
 # --- Helper functions ---
 def send_menu(to):
     msg = (
-        "👋 *Welcome to Mama Mboga!*\n\n"
+        "👋 *Welcome to Ivatech!*\n\n"
         "1️⃣ View Products\n"
         "2️⃣ View Promotions\n"
         "3️⃣ My Orders"
@@ -237,7 +255,7 @@ def send_confirmation_message(to, cart):
         send_whatsapp_message(to, "Your cart is empty.")
         return
 
-    message_lines = ["✅ *Confirm your order:*\n"]
+    message_lines = ["✅ *Confirm and Pay:*\n"]
     total_amount = 0
 
     for item in cart:
@@ -247,8 +265,15 @@ def send_confirmation_message(to, cart):
         total_amount += item_total
         message_lines.append(f"{quantity} x {product['name']} (KES {product['price']}) = KES {item_total:,.2f}")
 
-    message_lines.append(f"\n*Total: KES {total_amount:,.2f}*\n")
-    message_lines.append("Reply *yes* to confirm or *menu* to cancel.")
+    message_lines.append(f"\n*Subtotal: KES {total_amount:,.2f}*")
+
+    # Get promotion code from session
+    session = WhatsAppSession.objects.get(user__phone_number=to.replace("whatsapp:", ""))
+    promo_code = session.context.get("promotion_code")
+    if promo_code:
+        message_lines.append(f"*Promotion Applied: {promo_code}* (Discount will be calculated)")
+
+    message_lines.append("\nReply *yes* to pay with M-Pesa or *menu* to cancel.")
 
     send_whatsapp_message(to, "\n".join(message_lines))
 
